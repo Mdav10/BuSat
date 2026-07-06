@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_cors import CORS
-from flask_migrate import Migrate
 import bcrypt
 from datetime import datetime, timedelta
 import requests
@@ -11,8 +10,8 @@ import os
 import random
 import phonenumbers
 from phonenumbers import carrier, geocoder
-from skyfield.api import load, EarthSatellite
 import math
+import time
 
 app = Flask(__name__)
 app.secret_key = 'busat-advanced-secret-key-2026'
@@ -28,14 +27,12 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 CORS(app)
 
 # Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-login_manager.login_message_category = 'info'
 
 # ==================== MODELS ====================
 class User(UserMixin, db.Model):
@@ -92,10 +89,7 @@ class PhoneTrack(db.Model):
     carrier = db.Column(db.String(100))
     signal_strength = db.Column(db.Integer)
     accuracy = db.Column(db.Integer)
-    device_info = db.Column(db.Text)
     tracked_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    user = db.relationship('User', backref=db.backref('phone_tracks', lazy=True))
 
 class Favorite(db.Model):
     __tablename__ = 'favorites'
@@ -103,9 +97,6 @@ class Favorite(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     satellite_id = db.Column(db.Integer, db.ForeignKey('satellites.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    user = db.relationship('User', backref=db.backref('favorites', lazy=True))
-    satellite = db.relationship('Satellite', backref=db.backref('favorited_by', lazy=True))
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
@@ -116,57 +107,18 @@ class Notification(db.Model):
     type = db.Column(db.String(50))
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    user = db.relationship('User', backref=db.backref('notifications', lazy=True))
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
 # ==================== REAL DATA FUNCTIONS ====================
-def fetch_tle(norad_id):
-    """Fetch real TLE data from Celestrak"""
-    try:
-        url = f"https://celestrak.com/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=TLE"
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            lines = response.text.strip().split('\n')
-            if len(lines) >= 3:
-                return {
-                    'name': lines[0].strip(),
-                    'line1': lines[1].strip(),
-                    'line2': lines[2].strip()
-                }
-    except:
-        pass
-    return None
-
-def get_satellite_position(norad_id, tle_line1, tle_line2):
-    """Calculate real satellite position"""
-    try:
-        ts = load.timescale()
-        satellite = EarthSatellite(tle_line1, tle_line2)
-        t = ts.now()
-        geocentric = satellite.at(t)
-        subpoint = geocentric.subpoint()
-        
-        return {
-            'latitude': subpoint.latitude.degrees,
-            'longitude': subpoint.longitude.degrees,
-            'altitude': subpoint.elevation.km,
-            'speed': satellite.speed.km_per_s * 3600
-        }
-    except:
-        return None
-
 def get_iss_data():
     """Get REAL ISS data"""
     try:
-        # ISS position
         pos_resp = requests.get('http://api.open-notify.org/iss-now.json', timeout=5)
         pos_data = pos_resp.json()
         
-        # People in space
         people_resp = requests.get('http://api.open-notify.org/astros.json', timeout=5)
         people_data = people_resp.json()
         
@@ -180,20 +132,15 @@ def get_iss_data():
         return None
 
 def track_phone_real(phone_number):
-    """REAL phone tracking using multiple APIs"""
+    """REAL phone tracking"""
     try:
-        # Parse phone number
         parsed = phonenumbers.parse(phone_number, None)
         if not phonenumbers.is_valid_number(parsed):
             return None
         
-        # Get carrier
         carrier_name = carrier.name_for_number(parsed, "en")
-        
-        # Get country
         country = geocoder.country_name_for_number(parsed, "en")
         
-        # Get location via IP-based geolocation
         try:
             ip_resp = requests.get('http://ip-api.com/json/', timeout=5)
             ip_data = ip_resp.json()
@@ -205,7 +152,6 @@ def track_phone_real(phone_number):
                 'country': country or ip_data.get('country', 'Unknown'),
                 'city': ip_data.get('city', 'Unknown'),
                 'carrier': carrier_name or ip_data.get('isp', 'Unknown'),
-                'accuracy': 'High (IP + Carrier)',
                 'signal_strength': random.randint(60, 100)
             }
         except:
@@ -216,7 +162,6 @@ def track_phone_real(phone_number):
                 'country': country or 'Unknown',
                 'city': 'Unknown',
                 'carrier': carrier_name or 'Unknown',
-                'accuracy': 'Low',
                 'signal_strength': random.randint(40, 80)
             }
     except:
@@ -244,17 +189,6 @@ def login():
                 login_user(user)
                 user.last_login = datetime.utcnow()
                 db.session.commit()
-                
-                # Create notification
-                notif = Notification(
-                    user_id=user.id,
-                    title='Welcome Back!',
-                    message=f'Welcome back {user.username}!',
-                    type='login'
-                )
-                db.session.add(notif)
-                db.session.commit()
-                
                 flash('✅ Login successful!', 'success')
                 return redirect(url_for('dashboard'))
             else:
@@ -276,7 +210,6 @@ def register():
         password = request.form.get('password')
         confirm = request.form.get('confirm')
         
-        # Validation
         if User.query.filter_by(username=username).first():
             flash('❌ Username already exists.', 'danger')
             return render_template('register.html')
@@ -293,12 +226,7 @@ def register():
             flash('❌ Password must be at least 6 characters.', 'danger')
             return render_template('register.html')
         
-        # Create user
-        user = User(
-            username=username,
-            email=email,
-            phone_number=phone
-        )
+        user = User(username=username, email=email, phone_number=phone)
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
@@ -318,23 +246,8 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    # Update satellite positions
     satellites = Satellite.query.filter_by(is_active=True).all()
-    for sat in satellites:
-        if sat.tle_line1 and sat.tle_line2:
-            pos = get_satellite_position(sat.norad_id, sat.tle_line1, sat.tle_line2)
-            if pos:
-                sat.latitude = pos['latitude']
-                sat.longitude = pos['longitude']
-                sat.altitude = pos['altitude']
-                sat.speed = pos['speed']
-                sat.last_updated = datetime.utcnow()
-    db.session.commit()
-    
-    # Get ISS data
     iss = get_iss_data()
-    
-    # Get notifications
     notifications = Notification.query.filter_by(user_id=current_user.id, is_read=False).order_by(Notification.created_at.desc()).limit(5).all()
     
     return render_template('dashboard.html', 
@@ -349,100 +262,43 @@ def phone_track():
     result = None
     if request.method == 'POST':
         phone = request.form.get('phone_number')
-        
-        if not phone:
-            flash('❌ Please enter a phone number.', 'danger')
-            return render_template('phone_track.html')
-        
-        # REAL tracking
-        track_data = track_phone_real(phone)
-        
-        if track_data:
-            # Save to database
-            track = PhoneTrack(
-                user_id=current_user.id,
-                phone_number=phone,
-                latitude=track_data['latitude'],
-                longitude=track_data['longitude'],
-                country=track_data['country'],
-                city=track_data['city'],
-                carrier=track_data['carrier'],
-                signal_strength=track_data.get('signal_strength', 0),
-                accuracy=50
-            )
-            db.session.add(track)
-            db.session.commit()
-            
-            result = track_data
-            flash(f'📱 Phone {phone} tracked successfully!', 'success')
-            
-            # Create notification
-            notif = Notification(
-                user_id=current_user.id,
-                title='Phone Tracked',
-                message=f'Phone {phone} tracked at {track_data["city"]}, {track_data["country"]}',
-                type='track'
-            )
-            db.session.add(notif)
-            db.session.commit()
-        else:
-            flash('❌ Invalid phone number. Please include country code.', 'danger')
+        if phone:
+            track_data = track_phone_real(phone)
+            if track_data:
+                track = PhoneTrack(
+                    user_id=current_user.id,
+                    phone_number=phone,
+                    latitude=track_data['latitude'],
+                    longitude=track_data['longitude'],
+                    country=track_data['country'],
+                    city=track_data['city'],
+                    carrier=track_data['carrier'],
+                    signal_strength=track_data.get('signal_strength', 0)
+                )
+                db.session.add(track)
+                db.session.commit()
+                result = track_data
+                flash(f'📱 Phone {phone} tracked!', 'success')
+            else:
+                flash('❌ Invalid phone number.', 'danger')
     
-    # Get history
     history = PhoneTrack.query.filter_by(user_id=current_user.id).order_by(PhoneTrack.tracked_at.desc()).limit(20).all()
-    
     return render_template('phone_track.html', result=result, history=history)
-
-@app.route('/notifications')
-@login_required
-def notifications():
-    notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).all()
-    
-    # Mark as read
-    for n in notifs:
-        n.is_read = True
-    db.session.commit()
-    
-    return render_template('notifications.html', notifications=notifs)
-
-@app.route('/api/satellites')
-@login_required
-def api_satellites():
-    satellites = Satellite.query.filter_by(is_active=True).all()
-    result = []
-    for sat in satellites:
-        if sat.tle_line1 and sat.tle_line2:
-            pos = get_satellite_position(sat.norad_id, sat.tle_line1, sat.tle_line2)
-            result.append({
-                'id': sat.id,
-                'norad_id': sat.norad_id,
-                'name': sat.name,
-                'country': sat.country,
-                'orbit': sat.orbit_type,
-                'altitude': pos['altitude'] if pos else sat.altitude,
-                'speed': pos['speed'] if pos else sat.speed,
-                'latitude': pos['latitude'] if pos else sat.latitude,
-                'longitude': pos['longitude'] if pos else sat.longitude,
-                'category': sat.category,
-                'mission': sat.mission
-            })
-    return jsonify(result)
 
 @app.route('/api/iss')
 def api_iss():
     data = get_iss_data()
     if data:
         return jsonify(data)
-    return jsonify({'error': 'ISS data unavailable'}), 500
+    return jsonify({'error': 'ISS unavailable'}), 500
 
 @app.route('/api/phone-track', methods=['POST'])
 @login_required
 def api_phone_track():
     data = request.json
     phone = data.get('phone')
-    
     if not phone:
-        return jsonify({'error': 'Phone number required'}), 400
+        return jsonify({'error': 'Phone required'}), 400
     
     track_data = track_phone_real(phone)
     if track_data:
@@ -459,48 +315,13 @@ def api_phone_track():
         db.session.add(track)
         db.session.commit()
         return jsonify(track_data)
-    
-    return jsonify({'error': 'Invalid phone number'}), 400
-
-@app.route('/api/favorites', methods=['GET', 'POST', 'DELETE'])
-@login_required
-def api_favorites():
-    if request.method == 'GET':
-        favs = Favorite.query.filter_by(user_id=current_user.id).all()
-        return jsonify([{
-            'id': f.id,
-            'satellite_id': f.satellite_id,
-            'satellite_name': f.satellite.name if f.satellite else None
-        } for f in favs])
-    
-    if request.method == 'POST':
-        data = request.json
-        sat_id = data.get('satellite_id')
-        
-        existing = Favorite.query.filter_by(user_id=current_user.id, satellite_id=sat_id).first()
-        if existing:
-            return jsonify({'error': 'Already favorited'}), 400
-        
-        fav = Favorite(user_id=current_user.id, satellite_id=sat_id)
-        db.session.add(fav)
-        db.session.commit()
-        return jsonify({'success': True})
-    
-    if request.method == 'DELETE':
-        data = request.json
-        fav_id = data.get('id')
-        fav = Favorite.query.filter_by(id=fav_id, user_id=current_user.id).first()
-        if fav:
-            db.session.delete(fav)
-            db.session.commit()
-            return jsonify({'success': True})
-        return jsonify({'error': 'Not found'}), 404
+    return jsonify({'error': 'Invalid phone'}), 400
 
 @app.route('/admin')
 @login_required
 def admin():
     if not current_user.is_admin:
-        flash('❌ Admin access required.', 'danger')
+        flash('❌ Admin only.', 'danger')
         return redirect(url_for('dashboard'))
     
     users = User.query.all()
@@ -521,48 +342,24 @@ def admin():
 with app.app_context():
     db.create_all()
     
-    # Create admin if not exists
     if not User.query.filter_by(username='Mpc').first():
-        admin = User(
-            username='Mpc',
-            email='admin@busat.com',
-            is_admin=True,
-            is_active=True
-        )
+        admin = User(username='Mpc', email='admin@busat.com', is_admin=True)
         admin.set_password('08800Mpc!!')
         db.session.add(admin)
         db.session.commit()
         print("✅ Admin created: Mpc / 08800Mpc!!")
     
-    # Add REAL satellites
     if Satellite.query.count() == 0:
-        real_satellites = [
-            {'norad': 25544, 'name': 'International Space Station', 'country': 'International', 'operator': 'NASA/Roscosmos', 'category': 'Scientific', 'orbit': 'LEO'},
-            {'norad': 43205, 'name': 'Starlink-1000', 'country': 'USA', 'operator': 'SpaceX', 'category': 'Communication', 'orbit': 'LEO'},
-            {'norad': 37820, 'name': 'GPS IIF-1', 'country': 'USA', 'operator': 'US Air Force', 'category': 'Navigation', 'orbit': 'MEO'},
-            {'norad': 27424, 'name': 'GPS IIR-1', 'country': 'USA', 'operator': 'US Air Force', 'category': 'Navigation', 'orbit': 'MEO'},
-            {'norad': 41866, 'name': 'GOES-16', 'country': 'USA', 'operator': 'NOAA', 'category': 'Weather', 'orbit': 'GEO'},
-            {'norad': 28654, 'name': 'ISS (Zvezda)', 'country': 'Russia', 'operator': 'Roscosmos', 'category': 'Scientific', 'orbit': 'LEO'},
+        satellites = [
+            Satellite(norad_id=25544, name='International Space Station', country='International', operator='NASA/Roscosmos', category='Scientific', orbit_type='LEO'),
+            Satellite(norad_id=43205, name='Starlink-1000', country='USA', operator='SpaceX', category='Communication', orbit_type='LEO'),
+            Satellite(norad_id=37820, name='GPS IIF-1', country='USA', operator='US Air Force', category='Navigation', orbit_type='MEO'),
         ]
-        
-        for sat_data in real_satellites:
-            tle = fetch_tle(sat_data['norad'])
-            if tle:
-                sat = Satellite(
-                    norad_id=sat_data['norad'],
-                    name=sat_data['name'],
-                    country=sat_data['country'],
-                    operator=sat_data['operator'],
-                    category=sat_data['category'],
-                    orbit_type=sat_data['orbit'],
-                    tle_line1=tle['line1'],
-                    tle_line2=tle['line2']
-                )
-                db.session.add(sat)
-        
+        for sat in satellites:
+            db.session.add(sat)
         db.session.commit()
-        print(f"✅ {Satellite.query.count()} real satellites added")
+        print(f"✅ {Satellite.query.count()} satellites added")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port)
