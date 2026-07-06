@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notifications - BuSat</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',sans-serif;background:#0a0e17;color:#fff}
+        .navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .logo{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .container{padding:2rem;max-width:800px;margin:0 auto}
+        .back{color:#00d4ff;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
+        .notif-item{background:rgba(255,255,255,0.03);padding:1.2rem 1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);margin-bottom:0.8rem}
+        .notif-item .title{font-weight:600;font-size:1.05rem}
+        .notif-item .message{color:rgba(255,255,255,0.6);margin-top:0.3rem}
+        .notif-item .time{color:rgba(255,255,255,0.3);font-size:0.85rem;margin-top:0.3rem}
+        .empty{text-align:center;padding:3rem;color:rgba(255,255,255,0.3)}
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">🛰️ BuSat</div>
+        <a href="/dashboard" style="color:rgba(255,255,255,0.6);text-decoration:none;">← Dashboard</a>
+    </nav>
+    <div class="container">
+        <a href="/dashboard" class="back">← Back to Dashboard</a>
+        <h2 style="margin-bottom:1.5rem;">🔔 Notifications</h2>
+        
+        {% if notifications %}
+            {% for n in notifications %}
+            <div class="notif-item">
+                <div class="title">{{ n.title }}</div>
+                <div class="message">{{ n.message }}</div>
+                <div class="time">{{ n.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">📭 No notifications yet</div>
+        {% endif %}
+    </div>
+</body>
+</html>
