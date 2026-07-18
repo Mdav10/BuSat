@@ -61,7 +61,6 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
     
-    # Create admin
     if not User.query.filter_by(username='Mpc').first():
         admin = User(username='Mpc', email='admin@busat.com', is_admin=True)
         admin.set_password('08800Mpc!!')
@@ -69,12 +68,10 @@ with app.app_context():
         db.session.commit()
         print("✅ Admin created: Mpc / 08800Mpc!!")
 
-# ==================== REAL PHONE TRACKING ====================
 def track_phone(phone_number):
     """Real phone tracking"""
     try:
         parsed = phonenumbers.parse(phone_number, None)
-        
         if not phonenumbers.is_valid_number(parsed):
             return {'error': 'Invalid phone number'}
         
@@ -84,7 +81,6 @@ def track_phone(phone_number):
         try:
             ip_resp = requests.get('http://ip-api.com/json/', timeout=5)
             ip_data = ip_resp.json()
-            
             return {
                 'phone': phone_number,
                 'latitude': ip_data.get('lat', 0),
@@ -109,7 +105,6 @@ def track_phone(phone_number):
     except Exception as e:
         return {'error': str(e)}
 
-# ==================== ROUTES ====================
 @app.route('/')
 def index():
     if current_user.is_authenticated:
@@ -175,13 +170,11 @@ def phone_track():
     
     if request.method == 'POST':
         phone = request.form.get('phone_number')
-        
         if not phone:
             flash('❌ Enter a phone number', 'danger')
             return render_template('phone_track.html', history=history)
         
         location = track_phone(phone)
-        
         if 'error' in location:
             flash(f'❌ {location["error"]}', 'danger')
             return render_template('phone_track.html', history=history)
@@ -199,57 +192,10 @@ def phone_track():
         )
         db.session.add(track)
         db.session.commit()
-        
         result = location
         flash(f'📱 Phone {phone} tracked!', 'success')
     
     return render_template('phone_track.html', result=result, history=history)
-
-@app.route('/api/track', methods=['POST'])
-@login_required
-def api_track():
-    data = request.json
-    phone = data.get('phone')
-    
-    if not phone:
-        return jsonify({'error': 'Phone number required'}), 400
-    
-    location = track_phone(phone)
-    
-    if 'error' in location:
-        return jsonify({'error': location['error']}), 400
-    
-    track = PhoneTrack(
-        user_id=current_user.id,
-        phone_number=phone,
-        latitude=location['latitude'],
-        longitude=location['longitude'],
-        country=location['country'],
-        city=location['city'],
-        carrier=location['carrier'],
-        signal_strength=location['signal_strength'],
-        accuracy=location['accuracy']
-    )
-    db.session.add(track)
-    db.session.commit()
-    
-    return jsonify(location)
-
-@app.route('/api/history')
-@login_required
-def api_history():
-    history = PhoneTrack.query.filter_by(user_id=current_user.id).order_by(PhoneTrack.tracked_at.desc()).limit(50).all()
-    return jsonify([{
-        'phone': h.phone_number,
-        'latitude': h.latitude,
-        'longitude': h.longitude,
-        'country': h.country,
-        'city': h.city,
-        'carrier': h.carrier,
-        'signal': h.signal_strength,
-        'accuracy': h.accuracy,
-        'time': h.tracked_at.isoformat()
-    } for h in history])
 
 @app.route('/admin')
 @login_required
