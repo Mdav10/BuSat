@@ -12,18 +12,15 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 app = Flask(__name__)
 app.secret_key = 'busat-phone-track-2026'
 
-# Database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://neondb_owner:npg_ijc8mWwoCz2D@ep-noisy-frost-ato3kdpv-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Login Manager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Models
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -57,7 +54,6 @@ class PhoneTrack(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Create tables
 with app.app_context():
     db.create_all()
     
@@ -69,7 +65,6 @@ with app.app_context():
         print("✅ Admin created: Mpc / 08800Mpc!!")
 
 def track_phone(phone_number):
-    """Real phone tracking"""
     try:
         parsed = phonenumbers.parse(phone_number, None)
         if not phonenumbers.is_valid_number(parsed):
@@ -208,5 +203,5 @@ def admin():
     return render_template('admin.html', users=users, tracks=tracks)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
