@@ -1,78 +1,67 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Admin - BuSat</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',sans-serif;background:#0a0e17;color:#fff}
-        .header{background:rgba(10,14,23,0.95);padding:1rem 2rem;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center}
-        .header h1{color:#00d4ff}
-        .container{padding:2rem;max-width:1400px;margin:0 auto}
-        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
-        .stat-box{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);text-align:center}
-        .stat-box .number{font-size:2rem;font-weight:700;color:#00d4ff}
-        .stat-box .label{color:rgba(255,255,255,0.5);margin-top:0.3rem}
-        .card{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);margin-bottom:2rem}
-        .card h2{color:#00d4ff;margin-bottom:1rem}
-        table{width:100%;border-collapse:collapse}
-        th,td{padding:0.8rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04)}
-        th{color:rgba(255,255,255,0.5);font-weight:600;font-size:0.9rem}
-        .badge{padding:0.2rem 0.8rem;border-radius:20px;font-size:0.8rem;display:inline-block}
-        .badge-admin{background:rgba(255,215,0,0.15);color:#ffd700}
-        .badge-user{background:rgba(0,212,255,0.15);color:#00d4ff}
-        .btn{background:#ff0032;color:#fff;border:none;padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;font-weight:600}
-        .btn:hover{background:#cc0032}
-        .btn-primary{background:#00d4ff;color:#0a0e17}
-        .btn-primary:hover{background:#0066ff}
-    </style>
+<head><title>Admin - BuSat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#0a0e17;color:#fff}
+.header{background:rgba(10,14,23,0.95);padding:1rem 2rem;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center}
+.header h1{color:#00d4ff}
+.container{padding:2rem;max-width:1200px;margin:0 auto}
+.card{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.05);margin-bottom:2rem}
+.card h2{color:#00d4ff;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse}
+th,td{padding:0.8rem;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04)}
+th{color:rgba(255,255,255,0.5)}
+.badge{padding:0.2rem 0.6rem;border-radius:10px;font-size:0.8rem}
+.badge-admin{background:rgba(255,215,0,0.2);color:#ffd700}
+.badge-user{background:rgba(0,212,255,0.2);color:#00d4ff}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:2rem}
+.stat-box{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:10px;border:1px solid rgba(255,255,255,0.05);text-align:center}
+.stat-box .number{font-size:2rem;font-weight:bold;color:#00d4ff}
+.btn{background:#ff0032;color:#fff;border:none;padding:0.5rem 1rem;border-radius:5px;cursor:pointer}
+.btn-primary{background:#00d4ff;color:#0a0e17}
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>🛰️ BuSat Admin</h1>
-        <div>
-            <button class="btn btn-primary" onclick="location.href='/dashboard'">Dashboard</button>
-            <button class="btn" onclick="location.href='/logout'">Logout</button>
-        </div>
-    </div>
-    <div class="container">
-        <div class="stats">
-            <div class="stat-box"><div class="number">{{ stats.total_users }}</div><div class="label">Users</div></div>
-            <div class="stat-box"><div class="number">{{ stats.total_tracks }}</div><div class="label">Phone Tracks</div></div>
-            <div class="stat-box"><div class="number">{{ stats.total_satellites }}</div><div class="label">Satellites</div></div>
-            <div class="stat-box"><div class="number">{{ stats.total_notifications }}</div><div class="label">Notifications</div></div>
-        </div>
-        
-        <div class="card">
-            <h2>👥 Users</h2>
-            <table>
-                <tr><th>Username</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th></tr>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.phone_number or '-' }}</td>
-                    <td><span class="badge {% if user.is_admin %}badge-admin{% else %}badge-user{% endif %}">{{ 'Admin' if user.is_admin else 'User' }}</span></td>
-                    <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-        
-        <div class="card">
-            <h2>📱 Phone Tracking Logs</h2>
-            <table>
-                <tr><th>Phone</th><th>Location</th><th>Carrier</th><th>Signal</th><th>Time</th></tr>
-                {% for track in tracks %}
-                <tr>
-                    <td>{{ track.phone_number }}</td>
-                    <td>{{ track.city }}, {{ track.country }}</td>
-                    <td>{{ track.carrier or '-' }}</td>
-                    <td>{{ track.signal_strength or 0 }}%</td>
-                    <td>{{ track.tracked_at.strftime('%Y-%m-%d %H:%M') if track.tracked_at else '-' }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div>
+<div class="header">
+<h1>📱 BuSat Admin</h1>
+<div>
+<button class="btn btn-primary" onclick="location.href='/dashboard'">Dashboard</button>
+<button class="btn" onclick="location.href='/logout'">Logout</button>
+</div>
+</div>
+<div class="container">
+<div class="stats">
+<div class="stat-box"><div class="number">{{ users|length }}</div><div class="label">Users</div></div>
+<div class="stat-box"><div class="number">{{ tracks|length }}</div><div class="label">Phone Tracks</div></div>
+</div>
+<div class="card">
+<h2>👥 Users</h2>
+<table>
+<tr><th>Username</th><th>Email</th><th>Role</th></tr>
+{% for user in users %}
+<tr>
+<td>{{ user.username }}</td>
+<td>{{ user.email }}</td>
+<td><span class="badge {% if user.is_admin %}badge-admin{% else %}badge-user{% endif %}">{{ 'Admin' if user.is_admin else 'User' }}</span></td>
+</tr>
+{% endfor %}
+</table>
+</div>
+<div class="card">
+<h2>📱 Phone Tracks</h2>
+<table>
+<tr><th>Phone</th><th>Location</th><th>Carrier</th><th>Time</th></tr>
+{% for track in tracks %}
+<tr>
+<td>{{ track.phone_number }}</td>
+<td>{{ track.city }}, {{ track.country }}</td>
+<td>{{ track.carrier }}</td>
+<td>{{ track.tracked_at.strftime('%Y-%m-%d %H:%M') if track.tracked_at else '-' }}</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+</div>
 </body>
 </html>

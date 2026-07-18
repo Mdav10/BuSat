@@ -1,97 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Tracking - BuSat</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',sans-serif;background:#0a0e17;color:#fff}
-        .navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06)}
-        .logo{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .container{padding:2rem;max-width:900px;margin:0 auto}
-        .back{color:#00d4ff;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
-        .card{background:rgba(255,255,255,0.03);padding:2rem;border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:2rem}
-        .card h2{color:#00d4ff;margin-bottom:0.5rem}
-        .card .desc{color:rgba(255,255,255,0.5);margin-bottom:1.5rem}
-        .form-group{display:flex;gap:1rem;flex-wrap:wrap}
-        .form-group input{flex:1;padding:0.9rem 1.2rem;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.05);color:#fff;font-size:1rem;min-width:200px}
-        .form-group input:focus{outline:none;border-color:#00d4ff}
-        .form-group input::placeholder{color:rgba(255,255,255,0.3)}
-        .btn{padding:0.9rem 2.5rem;border:none;border-radius:12px;background:linear-gradient(135deg,#00d4ff,#0066ff);color:#fff;font-weight:600;cursor:pointer;transition:all 0.3s;font-size:1rem}
-        .btn:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(0,100,255,0.3)}
-        .result-card{background:rgba(0,212,255,0.05);padding:1.5rem;border-radius:14px;border:1px solid rgba(0,212,255,0.15);margin-bottom:2rem}
-        .result-card h3{color:#00d4ff;margin-bottom:1rem}
-        .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-        .result-item{padding:0.8rem;background:rgba(255,255,255,0.03);border-radius:10px}
-        .result-item .label{color:rgba(255,255,255,0.4);font-size:0.8rem}
-        .result-item .value{font-size:1.1rem;font-weight:600;margin-top:0.2rem}
-        .history-item{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
-        .history-item:last-child{border-bottom:none}
-        .flash{padding:0.8rem 1.2rem;border-radius:10px;margin-bottom:1.2rem}
-        .flash-success{background:rgba(0,255,100,0.08);border:1px solid rgba(0,255,100,0.15);color:#00ff64}
-        .flash-danger{background:rgba(255,0,50,0.08);border:1px solid rgba(255,0,50,0.15);color:#ff0032}
-        @media(max-width:768px){.result-grid{grid-template-columns:1fr}}
-    </style>
+<html>
+<head><title>Phone Tracking - BuSat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#0a0e17;color:#fff}
+.navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.logo{font-size:1.5rem;font-weight:bold;color:#00d4ff}
+.container{padding:2rem;max-width:900px;margin:0 auto}
+.back{color:#00d4ff;text-decoration:none;display:inline-block;margin-bottom:1.5rem}
+.card{background:rgba(255,255,255,0.03);padding:2rem;border-radius:16px;border:1px solid rgba(255,255,255,0.06);margin-bottom:2rem}
+.card h2{color:#00d4ff;margin-bottom:0.5rem}
+.form-group{display:flex;gap:1rem;flex-wrap:wrap}
+.form-group input{flex:1;padding:0.9rem 1.2rem;border-radius:12px;border:2px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.05);color:#fff;font-size:1rem;min-width:200px}
+.form-group input:focus{outline:none;border-color:#00d4ff}
+.btn{padding:0.9rem 2.5rem;border:none;border-radius:12px;background:#00d4ff;color:#0a0e17;font-weight:bold;cursor:pointer;font-size:1rem}
+.btn:hover{background:#0066ff}
+.flash{padding:0.8rem 1.2rem;border-radius:10px;margin-bottom:1rem}
+.flash-success{background:rgba(0,255,100,0.08);border:1px solid rgba(0,255,100,0.15);color:#00ff64}
+.flash-danger{background:rgba(255,0,50,0.08);border:1px solid rgba(255,0,50,0.15);color:#ff0032}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem}
+.result-item{background:rgba(255,255,255,0.03);padding:0.8rem;border-radius:10px}
+.result-item .label{color:rgba(255,255,255,0.4);font-size:0.8rem}
+.result-item .value{font-weight:bold;font-size:1.1rem;margin-top:0.2rem}
+.history-item{padding:0.8rem 1rem;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;justify-content:space-between;flex-wrap:wrap}
+.history-item:last-child{border-bottom:none}
+</style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">🛰️ BuSat</div>
-        <a href="/dashboard" style="color:rgba(255,255,255,0.6);text-decoration:none;">← Dashboard</a>
-    </nav>
-    
-    <div class="container">
-        <a href="/dashboard" class="back">← Back to Dashboard</a>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <div class="card">
-            <h2>📱 Track Phone Location</h2>
-            <p class="desc">Enter a phone number with country code to track its approximate location</p>
-            <form method="POST">
-                <div class="form-group">
-                    <input type="tel" name="phone_number" placeholder="+1234567890" required>
-                    <button type="submit" class="btn">📍 Track Now</button>
-                </div>
-            </form>
-        </div>
-        
-        {% if result %}
-        <div class="result-card">
-            <h3>📍 Location Result</h3>
-            <div class="result-grid">
-                <div class="result-item"><div class="label">Phone Number</div><div class="value">{{ result.phone }}</div></div>
-                <div class="result-item"><div class="label">Country</div><div class="value">{{ result.country }}</div></div>
-                <div class="result-item"><div class="label">City</div><div class="value">{{ result.city }}</div></div>
-                <div class="result-item"><div class="label">Carrier</div><div class="value">{{ result.carrier }}</div></div>
-                <div class="result-item"><div class="label">Signal Strength</div><div class="value">{{ result.signal_strength }}%</div></div>
-                <div class="result-item"><div class="label">Accuracy</div><div class="value">{{ result.accuracy }}</div></div>
-            </div>
-        </div>
-        {% endif %}
-        
-        {% if history %}
-        <div class="card">
-            <h3>📋 Tracking History</h3>
-            {% for item in history %}
-            <div class="history-item">
-                <div>
-                    <strong>{{ item.phone_number }}</strong>
-                    <span style="color:rgba(255,255,255,0.5);margin-left:1rem;">📍 {{ item.city }}, {{ item.country }}</span>
-                </div>
-                <div style="color:rgba(255,255,255,0.3);font-size:0.9rem;">
-                    📡 {{ item.carrier }} • {{ item.tracked_at.strftime('%Y-%m-%d %H:%M') }}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
+<nav class="navbar">
+<div class="logo">📱 BuSat</div>
+<a href="/dashboard" style="color:rgba(255,255,255,0.6);text-decoration:none;">← Dashboard</a>
+</nav>
+<div class="container">
+<a href="/dashboard" class="back">← Back</a>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}{% for c,m in messages %}<div class="flash flash-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}
+{% endwith %}
+<div class="card">
+<h2>📱 Track Phone</h2>
+<p style="color:rgba(255,255,255,0.5);margin-bottom:1.5rem;">Enter phone number with country code (e.g., +1234567890)</p>
+<form method="POST">
+<div class="form-group">
+<input type="tel" name="phone_number" placeholder="+1234567890" required>
+<button type="submit" class="btn">📍 Track</button>
+</div>
+</form>
+</div>
+{% if result %}
+<div class="card">
+<h3 style="color:#00d4ff;margin-bottom:1rem;">📍 Location Result</h3>
+<div class="result-grid">
+<div class="result-item"><div class="label">Phone</div><div class="value">{{ result.phone }}</div></div>
+<div class="result-item"><div class="label">Country</div><div class="value">{{ result.country }}</div></div>
+<div class="result-item"><div class="label">City</div><div class="value">{{ result.city }}</div></div>
+<div class="result-item"><div class="label">Carrier</div><div class="value">{{ result.carrier }}</div></div>
+<div class="result-item"><div class="label">Signal</div><div class="value">{{ result.signal_strength }}%</div></div>
+<div class="result-item"><div class="label">Accuracy</div><div class="value">±{{ result.accuracy }}m</div></div>
+<div class="result-item" style="grid-column: span 2;"><div class="label">Coordinates</div><div class="value">{{ '%.4f'|format(result.latitude) }}, {{ '%.4f'|format(result.longitude) }}</div></div>
+</div>
+</div>
+{% endif %}
+{% if history %}
+<div class="card">
+<h3>📋 History</h3>
+{% for item in history %}
+<div class="history-item">
+<div>
+<strong>{{ item.phone_number }}</strong>
+<span style="color:rgba(255,255,255,0.5);margin-left:1rem;">📍 {{ item.city }}, {{ item.country }}</span>
+</div>
+<div style="color:rgba(255,255,255,0.3);font-size:0.9rem;">
+📡 {{ item.carrier }} • {{ item.tracked_at.strftime('%Y-%m-%d %H:%M') }}
+</div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+</div>
 </body>
 </html>

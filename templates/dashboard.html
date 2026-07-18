@@ -1,161 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - BuSat</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Segoe UI',sans-serif;background:#0a0e17;color:#fff}
-        .navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px)}
-        .logo{font-size:1.5rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .nav-right{display:flex;align-items:center;gap:1.2rem}
-        .nav-right .username{color:rgba(255,255,255,0.7);font-size:0.95rem}
-        .nav-right a{color:#00d4ff;text-decoration:none;font-size:0.9rem}
-        .btn-logout{background:rgba(255,0,50,0.1);color:#ff0032;padding:0.5rem 1.2rem;border:1px solid rgba(255,0,50,0.15);border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s}
-        .btn-logout:hover{background:rgba(255,0,50,0.2)}
-        .container{padding:2rem;max-width:1400px;margin:0 auto}
-        .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-bottom:2rem}
-        .stat-card{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:16px;border:1px solid rgba(255,255,255,0.06);text-align:center}
-        .stat-card .number{font-size:2.2rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .stat-card .label{color:rgba(255,255,255,0.5);font-size:0.85rem;margin-top:0.3rem}
-        .quick-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
-        .quick-action{background:rgba(255,255,255,0.03);padding:1.2rem;border-radius:14px;text-align:center;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,0.06);transition:all 0.3s}
-        .quick-action:hover{transform:translateY(-3px);border-color:#00d4ff;background:rgba(0,212,255,0.05)}
-        .quick-action .icon{font-size:2rem;display:block;margin-bottom:0.5rem}
-        .iss-card{background:rgba(0,212,255,0.05);padding:1.5rem;border-radius:16px;border:1px solid rgba(0,212,255,0.15);margin-bottom:2rem}
-        .iss-card h2{color:#00d4ff;margin-bottom:0.5rem}
-        .iss-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
-        .iss-grid .coords{font-size:1.1rem;line-height:2}
-        .people-list{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem}
-        .person-tag{background:rgba(0,212,255,0.1);padding:0.3rem 1rem;border-radius:20px;font-size:0.9rem}
-        .section-title{font-size:1.5rem;font-weight:700;margin:2rem 0 1rem}
-        .satellite-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-        .sat-card{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:14px;border:1px solid rgba(255,255,255,0.06);transition:all 0.3s}
-        .sat-card:hover{transform:translateY(-3px);border-color:rgba(0,212,255,0.2)}
-        .sat-card h3{color:#00d4ff;margin-bottom:0.5rem}
-        .sat-card p{color:rgba(255,255,255,0.6);font-size:0.9rem;line-height:1.6}
-        .badge{display:inline-block;padding:0.2rem 0.8rem;border-radius:20px;font-size:0.8rem;background:rgba(0,212,255,0.15);color:#00d4ff;margin-top:0.5rem}
-        .notif-badge{background:#ff0032;color:#fff;border-radius:50%;padding:0.2rem 0.6rem;font-size:0.7rem;font-weight:700}
-        @media(max-width:768px){.stats-grid,.quick-actions{grid-template-columns:1fr 1fr}.iss-grid{grid-template-columns:1fr}}
-    </style>
+<html>
+<head><title>Dashboard - BuSat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial;background:#0a0e17;color:#fff}
+.navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.logo{font-size:1.5rem;font-weight:bold;color:#00d4ff}
+.container{padding:2rem;max-width:900px;margin:0 auto;text-align:center}
+.box{background:rgba(255,255,255,0.03);padding:3rem;border-radius:20px;border:1px solid rgba(255,255,255,0.05);margin-top:2rem}
+.box .icon{font-size:4rem;display:block;margin-bottom:1rem}
+.box h2{color:#00d4ff;margin-bottom:1rem}
+.box p{color:rgba(255,255,255,0.6);margin-bottom:2rem}
+.btn{display:inline-block;padding:1rem 3rem;border-radius:50px;text-decoration:none;font-weight:bold;background:#00d4ff;color:#0a0e17}
+.btn:hover{background:#0066ff}
+.btn-logout{background:rgba(255,0,50,0.2);color:#ff0032;padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer}
+a{color:#00d4ff;text-decoration:none}
+</style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">🛰️ BuSat</div>
-        <div class="nav-right">
-            <span class="username">👤 {{ user.username }}</span>
-            {% if user.is_admin %}<a href="/admin">⚙️ Admin</a>{% endif %}
-            {% if notifications %}<span class="notif-badge">{{ notifications|length }}</span>{% endif %}
-            <a href="/notifications">🔔</a>
-            <a href="/logout" class="btn-logout">Logout</a>
-        </div>
-    </nav>
-    
-    <div class="container">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card"><div class="number">{{ satellites|length }}</div><div class="label">Satellites</div></div>
-            <div class="stat-card"><div class="number">{{ iss.count if iss else 0 }}</div><div class="label">People in Space</div></div>
-            <div class="stat-card"><div class="number">{{ satellites|selectattr('orbit_type','equalto','LEO')|list|length }}</div><div class="label">LEO Satellites</div></div>
-            <div class="stat-card"><div class="number">{{ satellites|selectattr('orbit_type','equalto','GEO')|list|length }}</div><div class="label">GEO Satellites</div></div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-            <a href="/phone-track" class="quick-action"><span class="icon">📱</span>Track Phone</a>
-            <a href="#iss" class="quick-action"><span class="icon">🛰️</span>ISS Live</a>
-            <a href="#satellites" class="quick-action"><span class="icon">🚀</span>All Satellites</a>
-            <a href="#" class="quick-action"><span class="icon">📊</span>Statistics</a>
-        </div>
-        
-        <!-- ISS Live -->
-        <div class="iss-card" id="iss">
-            <h2>🛰️ International Space Station - Live</h2>
-            <div class="iss-grid">
-                <div>
-                    <div class="coords">
-                        <p>📍 <strong>Latitude:</strong> {{ '%.2f'|format(iss.latitude) if iss else 'N/A' }}°</p>
-                        <p>📍 <strong>Longitude:</strong> {{ '%.2f'|format(iss.longitude) if iss else 'N/A' }}°</p>
-                        <p>👨‍🚀 <strong>People on Board:</strong> {{ iss.count if iss else 0 }}</p>
-                    </div>
-                    <div class="people-list">
-                        {% if iss and iss.people %}
-                            {% for person in iss.people %}
-                                <span class="person-tag">👨‍🚀 {{ person.name }}</span>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                </div>
-                <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:1.5rem;text-align:center;display:flex;flex-direction:column;justify-content:center">
-                    <div style="font-size:4rem">🌍</div>
-                    <p style="color:rgba(255,255,255,0.4);font-size:0.9rem">Real-time Position</p>
-                    <p style="color:#00d4ff;font-size:1.3rem;font-weight:600">
-                        Lat: {{ '%.2f'|format(iss.latitude) if iss else 'N/A' }}°<br>
-                        Lon: {{ '%.2f'|format(iss.longitude) if iss else 'N/A' }}°
-                    </p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Satellites -->
-        <div id="satellites">
-            <h2 class="section-title">🛰️ Active Satellites</h2>
-            <div class="satellite-grid">
-                {% for sat in satellites %}
-                <div class="sat-card">
-                    <h3>{{ sat.name }}</h3>
-                    <p>📍 {{ sat.country or 'Unknown' }}</p>
-                    <p>🚀 {{ sat.orbit_type or 'N/A' }} • {{ '%.0f'|format(sat.altitude or 0) }} km</p>
-                    <p>⚡ {{ '%.0f'|format(sat.speed or 0) }} km/h</p>
-                    <p style="font-size:0.8rem;color:rgba(255,255,255,0.3)">
-                        Lat: {{ '%.2f'|format(sat.latitude or 0) }}° 
-                        Lon: {{ '%.2f'|format(sat.longitude or 0) }}°
-                    </p>
-                    <span class="badge">{{ sat.category or 'Uncategorized' }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Auto-refresh ISS every 30 seconds
-        setInterval(() => {
-            fetch('/api/iss')
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.error) {
-                        const issCard = document.querySelector('.iss-card');
-                        if (issCard) {
-                            issCard.innerHTML = `
-                                <h2>🛰️ International Space Station - Live</h2>
-                                <div class="iss-grid">
-                                    <div>
-                                        <div class="coords">
-                                            <p>📍 <strong>Latitude:</strong> ${parseFloat(data.latitude).toFixed(2)}°</p>
-                                            <p>📍 <strong>Longitude:</strong> ${parseFloat(data.longitude).toFixed(2)}°</p>
-                                            <p>👨‍🚀 <strong>People on Board:</strong> ${data.count}</p>
-                                        </div>
-                                        <div class="people-list">
-                                            ${data.people.map(p => `<span class="person-tag">👨‍🚀 ${p.name}</span>`).join('')}
-                                        </div>
-                                    </div>
-                                    <div style="background:rgba(0,0,0,0.3);border-radius:12px;padding:1.5rem;text-align:center;display:flex;flex-direction:column;justify-content:center">
-                                        <div style="font-size:4rem">🌍</div>
-                                        <p style="color:rgba(255,255,255,0.4);font-size:0.9rem">Real-time Position</p>
-                                        <p style="color:#00d4ff;font-size:1.3rem;font-weight:600">
-                                            Lat: ${parseFloat(data.latitude).toFixed(2)}°<br>
-                                            Lon: ${parseFloat(data.longitude).toFixed(2)}°
-                                        </p>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
-                })
-                .catch(console.log);
-        }, 30000);
-    </script>
+<nav class="navbar">
+<div class="logo">📱 BuSat</div>
+<div>
+<span>👤 {{ user.username }}</span>
+{% if user.is_admin %}<a href="/admin" style="margin:0 1rem;">Admin</a>{% endif %}
+<a href="/logout" class="btn-logout">Logout</a>
+</div>
+</nav>
+<div class="container">
+<div class="box">
+<span class="icon">📱</span>
+<h2>Phone Tracking</h2>
+<p>Track any phone number in real-time. Get location, carrier, and more.</p>
+<a href="/phone-track" class="btn">Start Tracking</a>
+</div>
+</div>
 </body>
 </html>
