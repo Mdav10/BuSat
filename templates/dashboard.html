@@ -1,38 +1,97 @@
 <!DOCTYPE html>
-<html>
-<head><title>Dashboard - BuSat</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial;background:#0a0e17;color:#fff}
-.navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1)}
-.logo{font-size:1.5rem;font-weight:bold;color:#00d4ff}
-.container{padding:2rem;max-width:900px;margin:0 auto;text-align:center}
-.box{background:rgba(255,255,255,0.03);padding:3rem;border-radius:20px;border:1px solid rgba(255,255,255,0.05);margin-top:2rem}
-.box .icon{font-size:4rem;display:block;margin-bottom:1rem}
-.box h2{color:#00d4ff;margin-bottom:1rem}
-.box p{color:rgba(255,255,255,0.6);margin-bottom:2rem}
-.btn{display:inline-block;padding:1rem 3rem;border-radius:50px;text-decoration:none;font-weight:bold;background:#00d4ff;color:#0a0e17}
-.btn:hover{background:#0066ff}
-.btn-logout{background:rgba(255,0,50,0.2);color:#ff0032;padding:0.5rem 1rem;border:none;border-radius:5px;cursor:pointer}
-a{color:#00d4ff;text-decoration:none}
-</style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - BuSat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',sans-serif;background:#0a0e17;color:#fff}
+        .navbar{background:rgba(10,14,23,0.95);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:1000;backdrop-filter:blur(10px)}
+        .logo{font-size:1.5rem;font-weight:800;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav-right{display:flex;align-items:center;gap:1.5rem}
+        .nav-right .username{color:rgba(255,255,255,0.8);font-weight:500}
+        .nav-right a{color:#00d4ff;text-decoration:none;font-weight:500}
+        .btn-logout{background:rgba(255,0,50,0.1);color:#ff0032;padding:0.5rem 1.2rem;border:1px solid rgba(255,0,50,0.15);border-radius:8px;cursor:pointer;font-weight:600;transition:all 0.3s}
+        .btn-logout:hover{background:rgba(255,0,50,0.2)}
+        .container{padding:2rem;max-width:1200px;margin:0 auto}
+        .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:2rem}
+        .stat-card{background:rgba(255,255,255,0.03);padding:1.5rem;border-radius:16px;border:1px solid rgba(255,255,255,0.06)}
+        .stat-card .number{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,#00d4ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-card .label{color:rgba(255,255,255,0.5);margin-top:0.3rem}
+        .quick-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-bottom:2rem}
+        .quick-action{background:rgba(255,255,255,0.03);padding:2rem;border-radius:16px;text-align:center;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,0.06);transition:all 0.3s}
+        .quick-action:hover{transform:translateY(-5px);border-color:#00d4ff;background:rgba(0,212,255,0.05);box-shadow:0 20px 60px rgba(0,100,255,0.1)}
+        .quick-action .icon{font-size:3rem;display:block;margin-bottom:0.8rem}
+        .quick-action h3{font-size:1.2rem;margin-bottom:0.3rem}
+        .quick-action p{color:rgba(255,255,255,0.4);font-size:0.9rem}
+        .section-title{font-size:1.3rem;font-weight:700;margin:2rem 0 1rem;color:#fff}
+        .track-list{display:grid;gap:0.8rem}
+        .track-item{background:rgba(255,255,255,0.03);padding:1rem 1.5rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+        .track-item .phone{font-weight:600;font-size:1.05rem}
+        .track-item .location{color:rgba(255,255,255,0.6)}
+        .track-item .time{color:rgba(255,255,255,0.3);font-size:0.85rem}
+        .badge{display:inline-block;padding:0.2rem 0.8rem;border-radius:20px;font-size:0.75rem;background:rgba(0,212,255,0.15);color:#00d4ff}
+        @media(max-width:768px){.stats-grid{grid-template-columns:1fr}.quick-actions{grid-template-columns:1fr}}
+    </style>
 </head>
 <body>
-<nav class="navbar">
-<div class="logo">📱 BuSat</div>
-<div>
-<span>👤 {{ user.username }}</span>
-{% if user.is_admin %}<a href="/admin" style="margin:0 1rem;">Admin</a>{% endif %}
-<a href="/logout" class="btn-logout">Logout</a>
-</div>
-</nav>
-<div class="container">
-<div class="box">
-<span class="icon">📱</span>
-<h2>Phone Tracking</h2>
-<p>Track any phone number in real-time. Get location, carrier, and more.</p>
-<a href="/phone-track" class="btn">Start Tracking</a>
-</div>
-</div>
+    <nav class="navbar">
+        <div class="logo">📱 BuSat</div>
+        <div class="nav-right">
+            <span class="username">👤 {{ user.username }}</span>
+            {% if user.is_admin %}<a href="/admin">⚙️ Admin</a>{% endif %}
+            <a href="/logout" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number">{{ total_tracks }}</div>
+                <div class="label">Total Tracks</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">{{ recent_tracks|length }}</div>
+                <div class="label">Recent Tracks</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'New' }}</div>
+                <div class="label">Member Since</div>
+            </div>
+        </div>
+        
+        <div class="quick-actions">
+            <a href="/phone-track" class="quick-action">
+                <span class="icon">📱</span>
+                <h3>Track Phone</h3>
+                <p>Get real-time location, carrier & device info</p>
+            </a>
+            <a href="/phone-track" class="quick-action">
+                <span class="icon">📊</span>
+                <h3>View History</h3>
+                <p>See all your previous tracking records</p>
+            </a>
+        </div>
+        
+        {% if recent_tracks %}
+        <h2 class="section-title">📋 Recent Tracks</h2>
+        <div class="track-list">
+            {% for track in recent_tracks %}
+            <div class="track-item">
+                <div>
+                    <span class="phone">📱 {{ track.phone_number }}</span>
+                    <span class="location">📍 {{ track.city }}, {{ track.country }}</span>
+                </div>
+                <div>
+                    <span class="badge">{{ track.carrier }}</span>
+                    <span class="time">{{ track.tracked_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>

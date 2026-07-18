@@ -2,7 +2,6 @@ FROM python:3.11-alpine
 
 WORKDIR /app
 
-# Install dependencies
 RUN apk add --no-cache gcc musl-dev postgresql-dev
 
 COPY requirements.txt .
