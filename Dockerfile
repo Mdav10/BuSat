@@ -1,8 +1,8 @@
-FROM python:3.11-alpine
+FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev postgresql-dev
+RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 10000
 
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000", "--workers", "2", "--threads", "2"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:10000", "--workers", "1"]

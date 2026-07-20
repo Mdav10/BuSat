@@ -31,14 +31,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    def set_password(self, password):
-        self.password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    def check_password(self, password):
-        return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
 class PhoneTrack(db.Model):
     __tablename__ = 'phone_tracks'
@@ -58,18 +51,19 @@ class PhoneTrack(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ==================== CREATE TABLES ====================
+# ==================== RESET DATABASE ====================
 with app.app_context():
+    # DROP all tables
+    db.drop_all()
+    # CREATE all tables fresh
     db.create_all()
     
-    # Check if admin exists
-    admin = User.query.filter_by(username='Mpc').first()
-    if not admin:
-        admin = User(username='Mpc', email='admin@busat.com', is_admin=True)
-        admin.set_password('08800Mpc!!')
-        db.session.add(admin)
-        db.session.commit()
-        print("✅ Admin created: Mpc / 08800Mpc!!")
+    # Create admin
+    admin = User(username='Mpc', email='admin@busat.com', is_admin=True)
+    admin.set_password('08800Mpc!!')
+    db.session.add(admin)
+    db.session.commit()
+    print("✅ Database reset! Admin created: Mpc / 08800Mpc!!")
 
 # ==================== PHONE TRACKING ====================
 def track_phone(phone_number):
@@ -123,13 +117,10 @@ def login():
         
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
-            if user.is_active:
-                login_user(user)
-                flash('✅ Welcome back!', 'success')
-                return redirect(url_for('dashboard'))
-            flash('❌ Account deactivated', 'danger')
-        else:
-            flash('❌ Invalid credentials', 'danger')
+            login_user(user)
+            flash('✅ Welcome back!', 'success')
+            return redirect(url_for('dashboard'))
+        flash('❌ Invalid credentials', 'danger')
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -220,8 +211,7 @@ def admin():
     tracks = PhoneTrack.query.all()
     stats = {
         'total_users': len(users),
-        'total_tracks': len(tracks),
-        'active_users': len([u for u in users if u.is_active])
+        'total_tracks': len(tracks)
     }
     return render_template('admin.html', users=users, tracks=tracks, stats=stats)
 
